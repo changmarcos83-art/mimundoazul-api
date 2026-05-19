@@ -20,8 +20,12 @@ COPY . .
 RUN npx prisma generate
 RUN npm run build
 
+# Verificación: si dist/main.js no existe, el build falla acá
+RUN test -f dist/main.js && echo "✅ dist/main.js generado" || (echo "❌ FALLO: dist/main.js no existe" && exit 1)
+
 # 4) Expongo el puerto (Railway inyecta PORT en runtime)
 EXPOSE 8080
 
 # 5) Al arrancar: corro migraciones pendientes y levanto la app
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
+# Uso path absoluto para evitar ambigüedades
+CMD ["sh", "-c", "npx prisma migrate deploy && node /app/dist/main.js"]
