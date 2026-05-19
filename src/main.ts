@@ -14,12 +14,21 @@ async function bootstrap() {
     }),
   );
 
-  // Permite que el admin y el sitio público (en otros dominios) consuman la API
+  // Permite que el admin y el sitio público (en otros dominios) consuman la API.
+  // FRONTEND_URL y ADMIN_URL pueden tener UNO o VARIOS dominios separados por coma.
+  // Ej: FRONTEND_URL="https://www.miweb.com,https://miweb.com,https://preview.vercel.app"
+  const parseOrigins = (v?: string) =>
+    (v ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+
+  const origenesPermitidos = [
+    ...parseOrigins(process.env.FRONTEND_URL),
+    ...parseOrigins(process.env.ADMIN_URL),
+    'http://localhost:3000',
+    'http://localhost:3002',
+  ];
+
   app.enableCors({
-    origin: [
-      process.env.FRONTEND_URL ?? 'http://localhost:3000',
-      process.env.ADMIN_URL ?? 'http://localhost:3002',
-    ],
+    origin: origenesPermitidos,
     credentials: true,
   });
 
