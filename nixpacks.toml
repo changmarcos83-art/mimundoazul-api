@@ -1,0 +1,20 @@
+# Configuración de build para Railway (Nixpacks).
+# - Instala dependencias
+# - Genera el Prisma Client (necesario antes de compilar)
+# - Compila la app NestJS
+# - Al arrancar: aplica migraciones pendientes y levanta la API
+
+[phases.setup]
+nixPkgs = ['nodejs_20']
+
+[phases.install]
+cmds = ['npm ci']
+
+[phases.build]
+cmds = [
+  'npx prisma generate',
+  'npm run build',
+]
+
+[start]
+cmd = 'npm run start:prod'
