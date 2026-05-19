@@ -1,0 +1,84 @@
+// Prisma schema para Mi Mundo Azul
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// USUARIO ADMIN
+// ============================================================
+model AdminUser {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  nombre    String
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admin_users")
+}
+
+// ============================================================
+// CATEGORIA
+// ============================================================
+model Categoria {
+  id          Int        @id @default(autoincrement())
+  nombre      String     @unique
+  slug        String     @unique
+  icono       String?
+  descripcion String?
+  orden       Int        @default(0)
+  activo      Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  productos   Producto[]
+
+  @@map("categorias")
+}
+
+// ============================================================
+// PRODUCTO
+// ============================================================
+model Producto {
+  id           Int       @id @default(autoincrement())
+  nombre       String
+  sku          String    @unique
+  descripcion  String?
+  precio       Decimal   @db.Decimal(10, 2)
+  precioPromo  Decimal?  @db.Decimal(10, 2) @map("precio_promo")
+  imagenUrl    String?   @map("imagen_url")
+  stock        Int       @default(0)
+  edadMin      Int?      @map("edad_min")
+  edadMax      Int?      @map("edad_max")
+  destacado    Boolean   @default(false)
+  activo       Boolean   @default(true)
+  orden        Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  categoriaId  Int?       @map("categoria_id")
+  categoria    Categoria? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+
+  @@index([activo])
+  @@index([categoriaId])
+  @@map("productos")
+}
+
+// ============================================================
+// CONFIGURACION
+// ============================================================
+model Configuracion {
+  clave       String   @id
+  valor       String
+  descripcion String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("configuracion")
+}
