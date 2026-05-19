@@ -2,19 +2,40 @@ import {
   BadRequestException,
   Controller,
   Post,
-  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'node:path';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { Request } from 'express';
 
-// Solo imágenes
-const FORMATOS_VALIDOS = ['.png', '.jpg', '.jpeg', '.webp', '.gif'];
+// Configura el SDK de Cloudinary con las credenciales del .env (Railway).
+// Se ejecuta una sola vez al cargar este módulo.
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
+});
+
+// Storage de multer que sube directo a Cloudinary en lugar de disco.
+// Las imágenes viven en Cloudinary, NUNCA en el filesystem de Railway.
+const storage = new CloudinaryStorage({
+  cloudinary,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  params: (async (_req: Request, file: Express.Multer.File) => ({
+    folder: 'mimundoazul',
+    // Permite los formatos típicos de imagen
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+    // Nombre único basado en timestamp + nombre original (sin extensión)
+    public_id: `${Date.now()}-${file.originalname.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9-_]/g, '_')}`,
+    // Optimización automática (calidad y formato)
+    transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+  })) as any,
+});
 
 @UseGuards(JwtAuthGuard)
 @Controller('admin/uploads')
@@ -22,62 +43,34 @@ export class UploadsController {
   /**
    * POST /admin/uploads
    * Form-data: { file: <imagen> }
-   * Devuelve: { url: "/uploads/abc123.png" }
+   * Devuelve: { url: "https://res.cloudinary.com/.../mimundoazul/xxx.png" }
    *
-   * El admin sube una foto y recibe la URL para usar en
-   * imagenUrl de un producto, logo, hero, etc.
+   * La imagen se sube a Cloudinary (CDN global, gratis hasta 25 GB) y
+   * devolvemos la URL pública. Esa URL se guarda en producto.imagenUrl,
+   * logo_url, hero_imagen_url, etc.
    */
   @Post()
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (
-          _req: Request,
-          file: Express.Multer.File,
-          cb: (error: Error | null, filename: string) => void,
-        ) => {
-          const ext = extname(file.originalname).toLowerCase();
-          const nombreUnico = `${Date.now()}-${Math.random()
-            .toString(36)
-            .slice(2, 10)}${ext}`;
-          cb(null, nombreUnico);
-        },
-      }),
-      fileFilter: (
-        _req: Request,
-        file: Express.Multer.File,
-        cb: (error: Error | null, accept: boolean) => void,
-      ) => {
-        const ext = extname(file.originalname).toLowerCase();
-        if (!FORMATOS_VALIDOS.includes(ext)) {
-          return cb(
-            new BadRequestException(
-              `Formato no permitido. Aceptados: ${FORMATOS_VALIDOS.join(', ')}`,
-            ),
-            false,
-          );
-        }
-        cb(null, true);
-      },
-      limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB máximo
+      storage,
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB máximo (Cloudinary lo optimiza solo)
     }),
   )
-  subir(@UploadedFile() file: Express.Multer.File, @Req() req: Request) {
+  subir(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No se envió ningún archivo');
     }
 
-    // Devuelvo la URL pública relativa. En producción podés concatenar
-    // el dominio (https://api.mimundoazul.com/uploads/...)
-    const protocol = req.protocol;
-    const host = req.get('host');
-    const url = `${protocol}://${host}/uploads/${file.filename}`;
+    // El campo "path" de Multer + CloudinaryStorage es la URL pública en HTTPS.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const url = (file as any).path as string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const publicId = (file as any).filename as string;
 
     return {
       ok: true,
       url,
-      path: `/uploads/${file.filename}`,
+      publicId,
       size: file.size,
       mimetype: file.mimetype,
     };
