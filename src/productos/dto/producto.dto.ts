@@ -7,7 +7,17 @@ import {
   IsString,
   Min,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
+
+/**
+ * Convierte el valor a Number, pero PRESERVA null/undefined.
+ * Útil para campos opcionales: si el admin manda null, queremos
+ * guardar null (Prisma borra el valor anterior), no convertir a 0.
+ */
+const toNumberOrNull = ({ value }: { value: unknown }) => {
+  if (value === null || value === undefined || value === '') return null;
+  return Number(value);
+};
 
 export class CrearProductoDto {
   @IsString()
@@ -27,15 +37,15 @@ export class CrearProductoDto {
   @Min(0)
   precio!: number;
 
-  @Type(() => Number)
+  @Transform(toNumberOrNull)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   @IsOptional()
-  precioPromo?: number;
+  precioPromo?: number | null;
 
   @IsString()
   @IsOptional()
-  imagenUrl?: string;
+  imagenUrl?: string | null;
 
   @Type(() => Number)
   @IsInt()
@@ -43,15 +53,15 @@ export class CrearProductoDto {
   @IsOptional()
   stock?: number;
 
-  @Type(() => Number)
+  @Transform(toNumberOrNull)
   @IsInt()
   @IsOptional()
-  edadMin?: number;
+  edadMin?: number | null;
 
-  @Type(() => Number)
+  @Transform(toNumberOrNull)
   @IsInt()
   @IsOptional()
-  edadMax?: number;
+  edadMax?: number | null;
 
   @IsBoolean()
   @IsOptional()
@@ -66,30 +76,32 @@ export class CrearProductoDto {
   @IsOptional()
   orden?: number;
 
-  @Type(() => Number)
+  @Transform(toNumberOrNull)
   @IsInt()
   @IsOptional()
-  categoriaId?: number;
+  categoriaId?: number | null;
 }
 
-// Para actualizar, todos los campos son opcionales
+// Para actualizar, todos los campos son opcionales.
+// Campos OPCIONALES que pueden venir como null para borrarlos:
+//   precioPromo, imagenUrl, edadMin, edadMax, categoriaId
 export class ActualizarProductoDto {
   @IsString() @IsOptional() nombre?: string;
   @IsString() @IsOptional() sku?: string;
-  @IsString() @IsOptional() descripcion?: string;
+  @IsString() @IsOptional() descripcion?: string | null;
 
   @Type(() => Number) @IsNumber({ maxDecimalPlaces: 2 }) @Min(0) @IsOptional()
   precio?: number;
 
-  @Type(() => Number) @IsNumber({ maxDecimalPlaces: 2 }) @Min(0) @IsOptional()
-  precioPromo?: number;
+  @Transform(toNumberOrNull) @IsNumber({ maxDecimalPlaces: 2 }) @Min(0) @IsOptional()
+  precioPromo?: number | null;
 
-  @IsString() @IsOptional() imagenUrl?: string;
+  @IsString() @IsOptional() imagenUrl?: string | null;
   @Type(() => Number) @IsInt() @Min(0) @IsOptional() stock?: number;
-  @Type(() => Number) @IsInt() @IsOptional() edadMin?: number;
-  @Type(() => Number) @IsInt() @IsOptional() edadMax?: number;
+  @Transform(toNumberOrNull) @IsInt() @IsOptional() edadMin?: number | null;
+  @Transform(toNumberOrNull) @IsInt() @IsOptional() edadMax?: number | null;
   @IsBoolean() @IsOptional() destacado?: boolean;
   @IsBoolean() @IsOptional() activo?: boolean;
   @Type(() => Number) @IsInt() @IsOptional() orden?: number;
-  @Type(() => Number) @IsInt() @IsOptional() categoriaId?: number;
+  @Transform(toNumberOrNull) @IsInt() @IsOptional() categoriaId?: number | null;
 }
