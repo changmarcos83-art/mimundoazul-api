@@ -1,10 +1,5 @@
 import { IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString, Max, Min } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
-
-const toNumberOrNull = ({ value }: { value: unknown }) => {
-  if (value === null || value === undefined || value === '') return null;
-  return Number(value);
-};
+import { Type } from 'class-transformer';
 
 export class CrearTestimonioDto {
   @IsString()
@@ -49,6 +44,6 @@ export class ActualizarTestimonioDto {
   estrellas?: number;
 
   @IsString() @IsOptional() avatarUrl?: string | null;
-  @Transform(toNumberOrNull) @IsInt() @IsOptional() orden?: number | null;
+  @Type(() => Number) @IsInt() @IsOptional() orden?: number;
   @IsBoolean() @IsOptional() activo?: boolean;
 }
