@@ -1,6 +1,7 @@
 # Dockerfile para el deploy de la API en Railway.
 # Define explícitamente cómo se construye el container, sin
 # depender de heurísticas del builder.
+# CACHE_BUST=2026-05-20-rebuild-testimonios-agotado
 
 FROM node:20-slim
 
