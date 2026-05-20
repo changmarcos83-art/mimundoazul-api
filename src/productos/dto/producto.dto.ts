@@ -71,6 +71,10 @@ export class CrearProductoDto {
   @IsOptional()
   activo?: boolean;
 
+  @IsBoolean()
+  @IsOptional()
+  agotado?: boolean;
+
   @Type(() => Number)
   @IsInt()
   @IsOptional()
@@ -102,6 +106,7 @@ export class ActualizarProductoDto {
   @Transform(toNumberOrNull) @IsInt() @IsOptional() edadMax?: number | null;
   @IsBoolean() @IsOptional() destacado?: boolean;
   @IsBoolean() @IsOptional() activo?: boolean;
+  @IsBoolean() @IsOptional() agotado?: boolean;
   @Type(() => Number) @IsInt() @IsOptional() orden?: number;
   @Transform(toNumberOrNull) @IsInt() @IsOptional() categoriaId?: number | null;
 }

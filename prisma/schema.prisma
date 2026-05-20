@@ -59,6 +59,7 @@ model Producto {
   edadMax      Int?      @map("edad_max")
   destacado    Boolean   @default(false)
   activo       Boolean   @default(true)
+  agotado      Boolean   @default(false) // si true, se muestra pero no se puede comprar
   orden        Int       @default(0)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
