@@ -82,3 +82,23 @@ model Configuracion {
 
   @@map("configuracion")
 }
+
+// ============================================================
+// TESTIMONIO
+// ============================================================
+// Sección "Lo que dicen los padres". Editable desde el admin.
+model Testimonio {
+  id        Int      @id @default(autoincrement())
+  nombre    String   // ej: "María Gómez"
+  relacion  String?  // ej: "Mamá de Lucas (4 años)"
+  mensaje   String   // el texto del review
+  estrellas Int      @default(5) // 1 a 5
+  avatarUrl String?  @map("avatar_url")
+  orden     Int      @default(0)
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([activo])
+  @@map("testimonios")
+}

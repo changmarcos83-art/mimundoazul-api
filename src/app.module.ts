@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { ProductosModule } from './productos/productos.module';
 import { CategoriasModule } from './categorias/categorias.module';
 import { ConfiguracionModule } from './configuracion/configuracion.module';
+import { TestimoniosModule } from './testimonios/testimonios.module';
 import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
@@ -15,6 +16,7 @@ import { UploadsModule } from './uploads/uploads.module';
     ProductosModule,
     CategoriasModule,
     ConfiguracionModule,
+    TestimoniosModule,
     UploadsModule,
   ],
 })
